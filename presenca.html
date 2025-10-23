@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Presença</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        form { max-width: 500px; }
+        label { display: block; margin-top: 10px; }
+        input, textarea, button { width: 100%; padding: 8px; margin-top: 5px; }
+        button { background-color: #2c7; border: none; color: white; cursor: pointer; }
+        button:hover { background-color: #28a745; }
+    </style>
+</head>
+<body>
+    <h2>Registro de Presença</h2>
+    <form action="inserir.php" method="POST">
+        <label>Atividade:</label>
+        <input type="text" name="PRE_ATIVIDADE" required>
+
+        <label>Data:</label>
+        <input type="date" name="PRE_DATA" required>
+
+        <label>Hora:</label>
+        <input type="time" name="PRE_HORA" required>
+
+        <label>Responsável:</label>
+        <input type="text" name="PRE_RESP" required>
+
+        <label>Educação:</label>
+        <input type="text" name="PRE_EDUCA">
+
+        <label>Prontuário:</label>
+        <input type="text" name="PRE_PRONT">
+
+        <label>Assinatura:</label>
+        <input type="text" name="PRE_ASSINA">
+
+        <label>Inclusão (data/hora):</label>
+        <input type="datetime-local" name="PRE_INC">
+
+        <button type="submit">Salvar Presença</button>
+    </form>
+</body>
+</html>
