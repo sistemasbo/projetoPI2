@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Evolução do Usuário</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .btn, .export-btn { margin-top: 10px; padding: 10px 14px; text-decoration: none; border: 1px solid #333; border-radius: 4px; display: inline-block; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f2f2f2; }
+    .chart-wrapper { max-width: 800px; margin: 30px auto; }
+    .filters { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Evolução do Usuário</h1>
+
+  <div class="filters">
+    <label>Matrícula: <input type="text" id="matricula"></label>
+    <label>ou Nome: <input type="text" id="nome"></label>
+    <label>Data Início: <input type="date" id="dataInicio"></label>
+    <label>Data Fim: <input type="date" id="dataFim"></label>
+    <label>Exibir: 
+      <select id="tipoView">
+        <option value="tabela">Listagem</option>
+        <option value="grafico">Gráfico</option>
+      </select>
+    </label>
+    <button id="buscar">Buscar Evolução</button>
+    <button class="export-btn" id="exportar">Exportar CSV</button>
+  </div>
+
+  <table id="resultados">
+    <thead>
+      <tr>
+        <th>PRONTUARIO</th>
+        <th>NOME DO USUÁRIO</th>
+        <th>DATA E HORA</th>
+        <th>CURSO</th>
+        <th>OBSERVAÇÃO</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="chart-wrapper">
+    <canvas id="graficoMensal"></canvas>
+  </div>
+
+  <a href="menu.html" class="btn">Voltar ao Menu</a>
+
+  <script>
+    // Dados simulados
+    const evolucaoMock = [
+      {pront: "001/2025", nome: "Maria Silva", data: "2025-01-15", curso: "Yoga", obs: "Boa participação"},
+      {pront: "001/2025", nome: "Maria Silva", data: "2025-02-10", curso: "Dança", obs: "Evolução visível"},
+      {pront: "002/2025", nome: "João Souza", data: "2025-01-20", curso: "Psicóloga", obs: "Acompanhamento emocional"},
+      {pront: "002/2025", nome: "João Souza", data: "2025-03-05", curso: "Roda de Conversa", obs: "Participativo"}
+    ];
+
+    let chartInstance = null;
+
+    function filtrarDados() {
+      const mat = document.getElementById('matricula').value.trim().toLowerCase();
+      const nome = document.getElementById('nome').value.trim().toLowerCase();
+      const dataInicio = document.getElementById('dataInicio').value;
+      const dataFim = document.getElementById('dataFim').value;
+
+      return evolucaoMock.filter(d => {
+        let match = true;
+        if(mat) match = match && d.pront.toLowerCase().includes(mat);
+        if(nome) match = match && d.nome.toLowerCase().includes(nome);
+        if(dataInicio) match = match && (d.data >= dataInicio);
+        if(dataFim) match = match && (d.data <= dataFim);
+        return match;
+      });
+    }
+
+    function renderTabela(dados) {
+      const tbody = document.querySelector('#resultados tbody');
+      tbody.innerHTML = '';
+      dados.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${d.pront}</td><td>${d.nome}</td><td>${d.data}</td><td>${d.curso}</td><td>${d.obs}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderGrafico(dados) {
+      const ctx = document.getElementById('graficoMensal');
+      const cursos = [...new Set(dados.map(d => d.curso))];
+      const contagem = cursos.map(c => dados.filter(d => d.curso === c).length);
+
+      if(chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: cursos,
+          datasets: [{ label: 'Participações', data: contagem, backgroundColor: 'rgba(54,162,235,0.6)' }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+
+    document.getElementById('buscar').addEventListener('click', () => {
+      const dados = filtrarDados();
+      const tipo = document.getElementById('tipoView').value;
+      if(tipo === 'tabela') {
+        document.getElementById('resultados').style.display = 'table';
+        document.querySelector('.chart-wrapper').style.display = 'none';
+        renderTabela(dados);
+      } else {
+        document.getElementById('resultados').style.display = 'none';
+        document.querySelector('.chart-wrapper').style.display = 'block';
+        renderGrafico(dados);
+      }
+    });
+
+    document.getElementById('exportar').addEventListener('click', () => {
+      const dados = filtrarDados();
+      if(dados.length === 0){ alert('Nenhum dado para exportar'); return; }
+      let csv = 'PRONTUARIO,NOME DO USUÁRIO,DATA,CURSO,OBSERVAÇÃO\n';
+      dados.forEach(d => { csv += `${d.pront},${d.nome},${d.data},${d.curso},${d.obs}\n`; });
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'evolucao_usuario.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

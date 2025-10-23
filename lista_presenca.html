@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lista de Presença</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:20px}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border:1px solid #ccc;padding:8px;text-align:left}
+    th{background:#f2f2f2}
+    .btn{display:inline-block;margin-top:20px;padding:10px 14px;text-decoration:none;border:1px solid #333;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h1>Lista de Presença</h1>
+  <table id="presencas">
+    <thead>
+      <tr>
+        <th>PRE_ATIVIDADE</th>
+        <th>DATA</th>
+        <th>HORA</th>
+        <th>RESPONSAVEL</th>
+        <th>EDUCADOR</th>
+        <th>PRONTUARIO</th>
+        <th>ASSINATURA</th>
+        <th>INCRICAO</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- dados simulados -->
+    </tbody>
+  </table>
+
+  <a href="menu.html" class="btn">Voltar ao Menu</a>
+
+  <script>
+    // Exemplo de dados simulados
+    const presencas = [
+      {pre:"Oficina Música", data:"2025-10-20", hora:"14:00", resp:"Maria", educ:"João", pront:"001/2025", ass:"---", incr:"123"},
+      {pre:"Artesanato", data:"2025-10-21", hora:"09:30", resp:"Ana", educ:"Pedro", pront:"002/2025", ass:"---", incr:"456"}
+    ];
+    const tbody = document.querySelector('#presencas tbody');
+    presencas.forEach(p=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${p.pre}</td><td>${p.data}</td><td>${p.hora}</td><td>${p.resp}</td><td>${p.educ}</td><td>${p.pront}</td><td>${p.ass}</td><td>${p.incr}</td>`;
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>

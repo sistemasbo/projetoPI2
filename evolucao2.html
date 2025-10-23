@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Evolução do Usuário</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .btn { margin-top: 20px; padding: 10px 14px; text-decoration: none; border: 1px solid #333; border-radius: 4px; display: inline-block; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f2f2f2; }
+    .chart-wrapper { max-width: 800px; margin: 30px auto; }
+  </style>
+</head>
+<body>
+  <h1>Evolução do Usuário</h1>
+
+  <label>Número da Matrícula: <input type="text" id="matricula"></label>
+  <button id="buscar">Buscar Evolução</button>
+
+  <table id="resultados">
+    <thead>
+      <tr>
+        <th>PRONTUARIO</th>
+        <th>NOME DO USUÁRIO</th>
+        <th>DATA E HORA</th>
+        <th>CURSO</th>
+        <th>OBSERVAÇÃO</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="chart-wrapper">
+    <canvas id="graficoMensal"></canvas>
+  </div>
+
+  <a href="menu.html" class="btn">Voltar ao Menu</a>
+
+  <script>
+    // Dados simulados
+    const evolucaoMock = {
+      "123": [
+        { pront: "001/2025", nome: "Maria Silva", data: "2025-10-20 14:00", curso: "Yoga", obs: "Boa participação" },
+        { pront: "001/2025", nome: "Maria Silva", data: "2025-10-25 09:00", curso: "Dança", obs: "Evolução visível" }
+      ],
+      "456": [
+        { pront: "002/2025", nome: "João Souza", data: "2025-10-22 10:30", curso: "Psicóloga", obs: "Acompanhamento emocional" }
+      ]
+    };
+
+    document.getElementById('buscar').addEventListener('click', () => {
+      const mat = document.getElementById('matricula').value.trim();
+      const dados = evolucaoMock[mat] || [];
+      const tbody = document.querySelector('#resultados tbody');
+      tbody.innerHTML = '';
+      dados.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${d.pront}</td><td>${d.nome}</td><td>${d.data}</td><td>${d.curso}</td><td>${d.obs}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Gráfico mensal (simples)
+      if (dados.length > 0) {
+        const ctx = document.getElementById('graficoMensal');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: dados.map(d => d.curso),
+            datasets: [{ label: 'Participações', data: dados.map(() => 1) }]
+          },
+          options: { responsive: true }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

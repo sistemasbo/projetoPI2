@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Consulta de Usuários</title>
+  <style>
+    body{font-family:Arial, sans-serif;margin:20px}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border:1px solid #ccc;padding:8px;text-align:left}
+    th{background:#f2f2f2}
+    .btn{display:inline-block;margin-top:16px;padding:10px 14px;text-decoration:none;border:1px solid #333;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h1>Consulta de Usuários</h1>
+  <table id="usuarios">
+    <thead>
+      <tr>
+        <th>Nome do Usuário</th>
+        <th>Senha (criptografada)</th>
+        <th>Último Acesso</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- dados serão inseridos via JS -->
+    </tbody>
+  </table>
+
+  <a href="menu.html" class="btn">Voltar à Tela Principal</a>
+
+  <script>
+    // Exemplo de dados simulados
+    const usuarios = [
+      {nome:"Maria Silva", senha:"$2b$10$abc123...", ultimo:"2025-10-22 14:32"},
+      {nome:"João Souza", senha:"$2b$10$xyz789...", ultimo:"2025-10-20 09:15"}
+    ];
+    const tbody = document.querySelector('#usuarios tbody');
+    usuarios.forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${u.nome}</td><td>${u.senha}</td><td>${u.ultimo}</td>`;
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
