@@ -5,13 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSC::.Tela de Login</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; }
-        .login-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
+        /* Seus estilos originais */
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; margin: 0; }
+        .login-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 300px; }
+        h2 { text-align: center; color: #333; font-size: 1.2em; }
         input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        input[type="submit"] { width: 100%; padding: 10px; background-color: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        input[type="submit"]:hover { background-color: #4cae4c; }
-        .error-message { color: red; text-align: center; margin-top: 10px; }
+        
+        /* Estilos do Banner de Cookies */
+        .cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+            display: none; /* Escondido por padrão via JS */
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            font-size: 14px;
+        }
+        .cookie-banner p { margin: 0; padding-right: 20px; line-height: 1.5; }
+        .cookie-btn {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .cookie-btn:hover { background-color: #4cae4c; }
     </style>
 </head>
 <body>
@@ -25,9 +51,52 @@
             <label for="senha">Senha:</label>
             <input type="password" id="senha" name="senha" required>
 
-             <a href="menu.html"><img src="button.png"></a>
+            <a href="menu.html"><img src="button.png" alt="Entrar" style="width: 100%;"></a>
         </form>
     </div>
+
+    <div id="cookieBanner" class="cookie-banner">
+        <p>
+            Nós utilizamos cookies para melhorar sua experiência e personalizar conteúdos de acordo com as normas da LGPD. 
+            Ao continuar navegando, você concorda com a nossa política de uso de dados.
+        </p>
+        <button class="cookie-btn" onClick="aceitarCookies()">Aceitar Cookies</button>
+    </div>
+
+    <script>
+        // Função para criar o cookie de consentimento alterado 05/2026
+        function setCookie(name, value, days) {
+            const d = new Date();
+            d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+            let expires = "expires=" + d.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/";
+        }
+
+        // Função para ler um cookie específico
+        function getCookie(name) {
+            let nameEQ = name + "=";
+            let ca = document.cookie.split(';');
+            for(let i=0;i < ca.length;i++) {
+                let c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
+
+        // Função executada ao clicar no botão 'Aceitar'
+        function aceitarCookies() {
+            setCookie("cookies_aceitos", "true", 30); // Salva por 30 dias
+            document.getElementById("cookieBanner").style.display = "none";
+        }
+
+        // Verifica se o usuário já aceitou os cookies ao carregar a página
+        window.onload = function() {
+            if (!getCookie("cookies_aceitos")) {
+                document.getElementById("cookieBanner").style.display = "flex";
+            }
+        };
+    </script>
 
 </body>
 </html>

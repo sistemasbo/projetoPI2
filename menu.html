@@ -139,6 +139,15 @@
       </div>
     </div>
   </div>
+  
+  <!--020526 Para exibir o nome do usuário logado na próxima página, basta incluir o cookies.js nela -->
+	<script src="cookies.js"></script>
+	<script>
+		const nome = CookieManager.get("user_name");
+		if(nome) {
+			document.body.prepend("Bem-vindo, " + nome);
+		}
+	</script>  
 
   <!-- RODAPÉ -->
   <footer>
@@ -148,5 +157,82 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- API de Geolocalização, Web Storage e WebSockets -- alterado 05 2026-->
+  <script>
+    // 1. WEB STORAGE (Gerenciamento de dados locais)
+    const StorageAPI = {
+        salvarAcesso(dados) {
+            let acessos = JSON.parse(localStorage.getItem('historico_acessos')) || [];
+            acessos.push(dados);
+            localStorage.setItem('historico_acessos', JSON.stringify(acessos));
+            console.log("Acesso registrado no Web Storage.");
+        },
+        obterUltimoAcesso() {
+            return JSON.parse(localStorage.getItem('historico_acessos'));
+        }
+    };
+
+    // 2. GEOLOCALIZAÇÃO (Captura de coordenadas)
+    function capturarLocalizacao() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const dadosAcesso = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    data: new Date().toLocaleString(),
+                    usuario: CookieManager.get("user_name") || "Anônimo"
+                };
+
+                console.log("Localização capturada:", dadosAcesso);
+                
+                // Salva no Web Storage
+                StorageAPI.salvarAcesso(dadosAcesso);
+
+                // Envia via WebSocket
+                enviarViaSocket(dadosAcesso);
+
+            }, (error) => {
+                console.error("Erro ao obter geolocalização: ", error.message);
+            });
+        } else {
+            console.log("Geolocalização não suportada pelo navegador.");
+        }
+    }
+
+    // 3. WEBSOCKETS (Comunicação em tempo real)
+    // Nota: Substitua a URL pelo seu servidor WebSocket real
+    let socket;
+    function conectarSocket() {
+        socket = new WebSocket("wss://echo.websocket.org"); // URL de teste (Echo)
+
+        socket.onopen = () => {
+            console.log("Conectado ao servidor WebSocket com sucesso.");
+            capturarLocalizacao(); // Dispara a captura após conectar
+        };
+
+        socket.onmessage = (event) => {
+            console.log("Mensagem recebida do servidor:", event.data);
+        };
+
+        socket.onerror = (error) => {
+            console.error("Erro no WebSocket:", error);
+        };
+    }
+
+    function enviarViaSocket(dados) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                tipo: "REGISTRO_PRESENCA",
+                payload: dados
+            }));
+            console.log("Dados enviados via WebSocket.");
+        }
+    }
+
+    // Inicializar quando a página carregar
+    window.addEventListener('load', () => {
+        conectarSocket();
+    });
+  </script>
 </body>
 </html>
