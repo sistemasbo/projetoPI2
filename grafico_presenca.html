@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gerenciador de Presença</title>
+  <style>
+    body{font-family:Inter, Roboto, Arial; padding:18px; background:#f7f8fa; color:#222}
+    .container{max-width:980px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(12,20,40,0.06)}
+    header{display:flex;align-items:center;justify-content:space-between}
+    h1{font-size:20px;margin:0}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    select,input,button{padding:8px 10px;border-radius:8px;border:1px solid #d1d5db}
+    button{cursor:pointer}
+    #chartWrap{margin-top:10px}
+    table{width:100%;border-collapse:collapse;margin-top:14px}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    .small{font-size:13px;color:#555}
+    a.back{display:inline-block;margin-top:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Gerenciador de Presença</h1>
+      <nav>
+        <a class="back" href="menu.html">← Voltar ao menu</a>
+      </nav>
+    </header>
+
+    <p class="small">Selecione o usuário e o ano para gerar o gráfico anual (totalização por mês).</p>
+
+    <div class="controls">
+      <label>
+        Usuário<br>
+        <select id="userSelect"></select>
+      </label>
+
+      <label>
+        Ano<br>
+        <select id="yearSelect"></select>
+      </label>
+
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button id="generateBtn">Gerar gráfico</button>
+        <button id="resetBtn" type="button">Limpar</button>
+      </div>
+    </div>
+
+    <div id="chartWrap">
+      <canvas id="attendanceChart" height="120"></canvas>
+    </div>
+
+    <div id="summary">
+      <!-- Tabela de totalizações mensais -->
+      <table id="totalsTable">
+        <thead>
+          <tr><th>Mês</th><th>Total de Presenças</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p class="small">Observação: Grafico gerado conforme a presença do usuário<code></code>.</p>
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // ---------- Dados de exemplo (substitua pela sua fonte real) ----------
+    // Cada registro representa uma presença com PRONTUARIO, NOME e DATA (ISO)
+    const attendanceData = [
+      {prontuario: '1001', nome: 'Ana Silva', date: '2025-01-10'},
+      {prontuario: '1001', nome: 'Ana Silva', date: '2025-01-20'},
+      {prontuario: '1001', nome: 'Ana Silva', date: '2025-02-05'},
+      {prontuario: '1002', nome: 'Bruno Lima', date: '2025-03-02'},
+      {prontuario: '1001', nome: 'Ana Silva', date: '2025-03-18'},
+      {prontuario: '1002', nome: 'Bruno Lima', date: '2025-04-11'},
+      {prontuario: '1003', nome: 'Carla Souza', date: '2024-12-30'},
+      {prontuario: '1001', nome: 'Ana Silva', date: '2025-05-09'},
+      {prontuario: '1001', nome: 'Ana Silva', date: '2025-05-15'},
+      {prontuario: '1002', nome: 'Bruno Lima', date: '2025-06-22'},
+      {prontuario: '1001', nome: 'Ana Silva', date: '2025-09-02'},
+      {prontuario: '1001', nome: 'Ana Silva', date: '2024-11-12'}
+    ];
+
+    // ---------- Utilitários ----------
+    const monthsPt = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+    function uniqueUsers(data){
+      const map = new Map();
+      data.forEach(r => map.set(r.prontuario, r));
+      // Retorna array de objetos {prontuario, nome}
+      return Array.from(map.values()).map(r => ({prontuario: r.prontuario, nome: r.nome}));
+    }
+
+    // ---------- Inicialização de selects ----------
+    const userSelect = document.getElementById('userSelect');
+    const yearSelect = document.getElementById('yearSelect');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function populateUsers(){
+      const users = uniqueUsers(attendanceData).sort((a,b)=> a.nome.localeCompare(b.nome));
+      userSelect.innerHTML = '<option value="">-- selecione --</option>' + users.map(u=>
+        `<option value="${u.prontuario}" data-nome="${u.nome}">${u.nome} (${u.prontuario})</option>`
+      ).join('');
+    }
+
+    function populateYears(){
+      const years = new Set(attendanceData.map(r=>new Date(r.date).getFullYear()));
+      // adiciona o ano atual caso não exista
+      years.add(new Date().getFullYear());
+      const arr = Array.from(years).sort((a,b)=>b-a);
+      yearSelect.innerHTML = arr.map(y=>`<option value="${y}">${y}</option>`).join('');
+    }
+
+    populateUsers();
+    populateYears();
+
+    // ---------- Lógica de agrupamento e geração do gráfico ----------
+    let chartInstance = null;
+
+    function computeMonthlyTotals(prontuario, year){
+      const totals = Array(12).fill(0);
+      attendanceData.forEach(r=>{
+        const d = new Date(r.date);
+        if (r.prontuario === prontuario && d.getFullYear() === Number(year)){
+          totals[d.getMonth()] += 1;
+        }
+      });
+      return totals;
+    }
+
+    function renderTable(totals){
+      const tbody = document.querySelector('#totalsTable tbody');
+      tbody.innerHTML = '';
+      totals.forEach((v,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${monthsPt[i]}</td><td>${v}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderChart(totals, label){
+      const ctx = document.getElementById('attendanceChart');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: monthsPt,
+          datasets: [{
+            label: label,
+            data: totals,
+            borderRadius: 6,
+            barThickness: 'flex'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {beginAtZero:true, ticks:{precision:0}}
+          },
+          plugins: {
+            legend: {display:true}
+          }
+        }
+      });
+    }
+
+    // ---------- Eventos ----------
+    generateBtn.addEventListener('click', ()=>{
+      const prontuario = userSelect.value;
+      const year = yearSelect.value;
+
+      if(!prontuario){
+        alert('Selecione um usuário.');
+        return;
+      }
+      if(!year){
+        alert('Selecione um ano.');
+        return;
+      }
+
+      const userName = userSelect.options[userSelect.selectedIndex].dataset.nome || '';
+      const totals = computeMonthlyTotals(prontuario, year);
+      renderTable(totals);
+      renderChart(totals, `${userName} — ${year}`);
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      userSelect.selectedIndex = 0;
+      yearSelect.selectedIndex = 0;
+      if(chartInstance) chartInstance.destroy();
+      document.querySelector('#totalsTable tbody').innerHTML = '';
+    });
+
+    // ---------- Permitindo que o usuário substitua os dados facilmente ----------
+    // Se você vai conectar a uma API, substitua a constante attendanceData
+    // por uma chamada fetch e então chame populateUsers() e populateYears() quando os dados chegarem.
+
+  </script>
+</body>
+</html>
